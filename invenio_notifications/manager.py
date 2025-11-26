@@ -7,9 +7,26 @@
 # under the terms of the MIT License; see LICENSE file for more details.
 
 """Notification manager."""
+from flask import current_app
+from flask_babel import force_locale, LazyString
 
 from invenio_notifications.tasks import broadcast_notification, dispatch_notification
 
+def get_locale(recipient):
+    locale = None
+    if isinstance(recipient, dict):
+        locale = recipient.get("data", {}).get("preferences", {}).get("locale")
+    return locale or current_app.config.get("BABEL_DEFAULT_LOCALE", "en")
+
+def resolve_lazy_strings(data):
+    if isinstance(data, dict):
+        return {key: resolve_lazy_strings(value) for key, value in data.items()}
+    elif isinstance(data, list):
+        return [resolve_lazy_strings(item) for item in data]
+    elif isinstance(data, LazyString):
+        return str(data)
+    else:
+        return data
 
 class NotificationManager:
     """Notification manager.
@@ -46,6 +63,10 @@ class NotificationManager:
         recipients = builder.build_recipients(notification)
         recipients = builder.filter_recipients(notification, recipients)
         for recipient in recipients.values():
+            locale = get_locale(recipient)
+            with force_locale(locale):
+                recipient.data = resolve_lazy_strings(recipient.data)
+                notification.context = resolve_lazy_strings(notification.context)
             recipient_backends = builder.build_recipient_backends(
                 notification, recipient
             )
