@@ -9,14 +9,16 @@
 
 """Invenio module for notifications support."""
 
+from functools import cached_property
+
+from flask import current_app
 from flask_menu import current_menu
-from invenio_base.utils import entry_points
+from invenio_base.utils import entry_points, obj_or_import_string
 from invenio_i18n import LazyString
 from invenio_i18n import lazy_gettext as _
 from invenio_theme.proxies import current_theme_icons
 
 from . import config
-from .manager import NotificationManager
 
 
 class InvenioNotifications(object):
@@ -30,7 +32,6 @@ class InvenioNotifications(object):
     def init_app(self, app):
         """Flask application initialization."""
         self.init_config(app)
-        self.init_manager(app)
         self.init_registries(app)
         app.extensions["invenio-notifications"] = self
 
@@ -40,13 +41,13 @@ class InvenioNotifications(object):
             if k.startswith("NOTIFICATIONS_"):
                 app.config.setdefault(k, getattr(config, k))
 
-    def init_manager(self, app):
+    @cached_property
+    def manager(self):
         """Initialize manager."""
-        manager = NotificationManager(
-            backends=app.config["NOTIFICATIONS_BACKENDS"],
-            builders=app.config["NOTIFICATIONS_BUILDERS"],
+        return obj_or_import_string(current_app.config["NOTIFICATIONS_MANAGER_CLS"])(
+            backends=current_app.config["NOTIFICATIONS_BACKENDS"],
+            builders=current_app.config["NOTIFICATIONS_BUILDERS"],
         )
-        self.manager = manager
 
     def init_registries(self, app):
         """Initialize registries."""
