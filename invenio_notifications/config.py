@@ -9,13 +9,15 @@
 
 """Invenio module for notifications support."""
 
-NOTIFICATIONS_MANAGER_CLS = "invenio_notifications.manager.NotificationManager"
+# NOTIFICATIONS_MANAGER_CLS = "invenio_notifications.manager.NotificationManager"
 """Notification manager class.
 
 Takes care of building notifications and forwarding them to the backend(s).
 Override it to plug in a manager with different dispatch behaviour. It is
 instantiated lazily with the configured backends and builders, and may be given
 either as an import string or as the class itself.
+
+This class is intentionally commented out so that libraries can override it.
 
 .. code-block::python
 
