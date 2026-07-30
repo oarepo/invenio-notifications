@@ -47,7 +47,8 @@ class InvenioNotifications(object):
         return obj_or_import_string(
             current_app.config.get(
                 "NOTIFICATIONS_MANAGER_CLS", 
-                "invenio_notifications.manager.NotificationManager")
+                "invenio_notifications.manager.NotificationManager"
+            )
         )(
             backends=current_app.config["NOTIFICATIONS_BACKENDS"],
             builders=current_app.config["NOTIFICATIONS_BUILDERS"],
